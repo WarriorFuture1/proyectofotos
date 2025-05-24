@@ -2,39 +2,24 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Gallery from './components/Gallery';
 
-const CLOUDINARY_BASE_URL = import.meta.env.VITE_CLOUDINARY_URL || 'https://res.cloudinary.com/tu_cloud_name/image/upload';
-
+const CLOUDINARY_BASE_URL = import.meta.env.VITE_CLOUDINARY_BASE || 'https://res.cloudinary.com/tu_cloud_name/image/upload';
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
-const getThumbnailUrl = (publicId) => `${CLOUDINARY_BASE_URL}/c_scale,w_200/${publicId}.jpg`;
 
 export default function App() {
   const [images, setImages] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [loadingComments, setLoadingComments] = useState(false);
 
+  // Carga las imágenes desde backend (Cloudinary)
   useEffect(() => {
     axios.get(`${API_BASE_URL}/api/images`)
-      .then(res => {
-        setImages(res.data); // res.data es un array con public_ids de Cloudinary
-        setCurrentIndex(0); // Opcional: selecciona la primera imagen para mostrar
-      })
-      .catch(err => {
-        console.error('Error cargando imágenes:', err);
-      });
+      .then(res => setImages(res.data))
+      .catch(() => setImages([]));
   }, []);
-  
 
-  useEffect(() => {
-    if (currentIndex !== null && images[currentIndex]) {
-      setSelectedImage(images[currentIndex]);
-    } else {
-      setSelectedImage(null);
-    }
-  }, [currentIndex, images]);
-
+  // Cuando cambia la imagen seleccionada, carga comentarios
   useEffect(() => {
     if (selectedImage) {
       setLoadingComments(true);
@@ -52,8 +37,9 @@ export default function App() {
     }
   }, [selectedImage]);
 
+  // Añadir comentario nuevo
   const addComment = () => {
-    if (!newComment.trim()) return;
+    if (!newComment.trim() || !selectedImage) return;
     axios.post(`${API_BASE_URL}/api/frases`, {
       imageId: selectedImage,
       frase: newComment.trim(),
@@ -66,19 +52,33 @@ export default function App() {
       .catch(() => alert('Error al añadir comentario'));
   };
 
+  // Navegar imagen anterior
   const prevImage = (e) => {
     e.stopPropagation();
-    setCurrentIndex(i => (i === 0 ? images.length - 1 : i - 1));
+    if (!selectedImage) return;
+    const currentIndex = images.indexOf(selectedImage);
+    const prevIndex = currentIndex === 0 ? images.length - 1 : currentIndex - 1;
+    setSelectedImage(images[prevIndex]);
   };
 
+  // Navegar imagen siguiente
   const nextImage = (e) => {
     e.stopPropagation();
-    setCurrentIndex(i => (i === images.length - 1 ? 0 : i + 1));
+    if (!selectedImage) return;
+    const currentIndex = images.indexOf(selectedImage);
+    const nextIndex = currentIndex === images.length - 1 ? 0 : currentIndex + 1;
+    setSelectedImage(images[nextIndex]);
   };
 
+  // Abrir modal con imagen seleccionada
+  const openImage = (id) => {
+    setSelectedImage(id);
+  };
+
+  // Cerrar modal
   const closeModal = (e) => {
     e.stopPropagation();
-    setCurrentIndex(null);
+    setSelectedImage(null);
   };
 
   return (
@@ -92,12 +92,10 @@ export default function App() {
       boxSizing: 'border-box'
     }}>
       <h1 style={{ textAlign: 'center', marginBottom: '0px', marginTop: '10px', color: 'white' }}>ZULO gallery</h1>
+      
       <Gallery
         images={images}
-        onImageClick={(id) => {
-          const index = images.indexOf(id);
-          if (index !== -1) setCurrentIndex(index);
-        }}
+        onImageClick={openImage}
       />
 
       {selectedImage && (
@@ -180,7 +178,7 @@ export default function App() {
 
             {/* Imagen */}
             <img
-              src={`${CLOUDINARY_BASE_URL}/fotos/${selectedImage}.jpg`}
+              src={`${CLOUDINARY_BASE_URL}/${selectedImage}.jpg`}
               alt={selectedImage}
               style={{
                 flex: '1 1 auto',
@@ -239,7 +237,7 @@ export default function App() {
               ) : (
                 <ul style={{ flexGrow: 1, paddingLeft: '20px', margin: 0, color: 'black' }}>
                   {comments.map((c, i) => (
-                    <li key={i} style={{ marginBottom: '10px' }}>{c.frase}</li>
+                    <li key={i} style={{ marginBottom: '10px' }}>{c.texto}</li>
                   ))}
                 </ul>
               )}
