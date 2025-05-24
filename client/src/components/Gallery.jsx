@@ -1,24 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
-const CLOUDINARY_BASE_URL = 'https://res.cloudinary.com/dzqzg58b2/image/upload';
+const CLOUDINARY_BASE_URL = import.meta.env.VITE_CLOUDINARY_BASE || 'https://res.cloudinary.com/tu_cloud_name/image/upload';
 
-export default function Gallery({ onImageClick }) {
-  const [images, setImages] = useState([]);
+export default function Gallery({ images, onImageClick }) {
   const [commentsCount, setCommentsCount] = useState({});
 
   useEffect(() => {
-    axios.get('https://proyectofotos.onrender.com/api/images') // Cambia por tu URL real
-      .then(res => setImages(res.data))
-      .catch(err => console.error('Error cargando imágenes', err));
-  }, []);
-
-  useEffect(() => {
-    const fetchCounts = async () => {
+    const fetchCommentsCount = async () => {
       const counts = {};
       for (const publicId of images) {
         try {
-          const res = await axios.get(`https://proyectofotos.onrender.com/api/frases/${publicId}`);
+          const res = await axios.get(`http://localhost:4000/api/frases/${publicId}`);
           counts[publicId] = res.data.length;
         } catch {
           counts[publicId] = 0;
@@ -27,18 +20,20 @@ export default function Gallery({ onImageClick }) {
       setCommentsCount(counts);
     };
 
-    if (images.length) fetchCounts();
+    if (images.length) {
+      fetchCommentsCount();
+    }
   }, [images]);
 
   return (
     <div style={{
       display: 'grid',
       gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-      gap: '20px'
+      gap: '20px',
     }}>
-      {images.map((publicId, i) => (
+      {images.map((publicId) => (
         <div
-          key={i}
+          key={publicId}
           onClick={() => onImageClick(publicId)}
           style={{
             position: 'relative',
@@ -58,6 +53,7 @@ export default function Gallery({ onImageClick }) {
               transition: 'transform 0.3s',
               borderRadius: '12px',
             }}
+            draggable={false}
           />
           <div style={{
             position: 'absolute',
@@ -67,7 +63,8 @@ export default function Gallery({ onImageClick }) {
             color: 'white',
             padding: '4px 8px',
             borderRadius: '8px',
-            fontSize: '14px'
+            fontSize: '14px',
+            userSelect: 'none',
           }}>
             💬 {commentsCount[publicId] || 0}
           </div>
