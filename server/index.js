@@ -38,9 +38,9 @@ app.use('/images', express.static(imagesPath));
 app.get('/api/images', async (req, res) => {
   try {
     const result = await cloudinary.search
-      .expression('folder:galeria') // Usa tu carpeta de Cloudinary si subes allí
+      .expression('folder:fotos') // Usa tu carpeta de Cloudinary si subes allí
       .sort_by('public_id','desc')
-      .max_results(100)
+      .max_results(200)
       .execute();
 
     const imagePublicIds = result.resources.map(img => img.public_id);

@@ -5,6 +5,7 @@ import Gallery from './components/Gallery';
 const CLOUDINARY_BASE_URL = import.meta.env.VITE_CLOUDINARY_URL || 'https://res.cloudinary.com/tu_cloud_name/image/upload';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+const getThumbnailUrl = (publicId) => `${CLOUDINARY_BASE_URL}/c_scale,w_200/${publicId}.jpg`;
 
 export default function App() {
   const [images, setImages] = useState([]);
@@ -15,17 +16,16 @@ export default function App() {
   const [loadingComments, setLoadingComments] = useState(false);
 
   useEffect(() => {
-    // Aquí deberías cargar la lista de imágenes desde alguna fuente, pero como
-    // no subes imágenes desde la app ni tienes listado en backend, ponemos lista hardcodeada:
-    // O podrías pedirlas desde Cloudinary (pero necesitarías backend).
-    const hardcodedImages = [
-      'imagen1',
-      'imagen2',
-      'imagen3',
-      // Pon aquí los nombres públicos que tengas en Cloudinary (sin extensión)
-    ];
-    setImages(hardcodedImages);
+    axios.get(`${API_BASE_URL}/api/images`)
+      .then(res => {
+        setImages(res.data); // res.data es un array con public_ids de Cloudinary
+        setCurrentIndex(0); // Opcional: selecciona la primera imagen para mostrar
+      })
+      .catch(err => {
+        console.error('Error cargando imágenes:', err);
+      });
   }, []);
+  
 
   useEffect(() => {
     if (currentIndex !== null && images[currentIndex]) {
@@ -180,7 +180,7 @@ export default function App() {
 
             {/* Imagen */}
             <img
-              src={`${CLOUDINARY_BASE_URL}/${selectedImage}.jpg`}
+              src={`${CLOUDINARY_BASE_URL}/fotos/${selectedImage}.jpg`}
               alt={selectedImage}
               style={{
                 flex: '1 1 auto',
