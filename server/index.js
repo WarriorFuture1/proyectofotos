@@ -1,83 +1,75 @@
-const express = require('express');
-const cors = require('cors');
-const fs = require('fs');
-const path = require('path');
-const mongoose = require('mongoose');
-require('dotenv').config();
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 
-const Frase = require('./models/Frase');
+const CLOUDINARY_BASE_URL = import.meta.env.VITE_CLOUDINARY_BASE || 'https://res.cloudinary.com/tu_cloud_name/image/upload';
 
-const app = express();
-const PORT = process.env.PORT || 4000;
+export default function Gallery({ images, onImageClick }) {
+  const [commentsCount, setCommentsCount] = useState({});
 
-const cloudinary = require('cloudinary').v2;
+  useEffect(() => {
+    const fetchCommentsCount = async () => {
+      const counts = {};
+      for (const publicId of images) {
+        try {
+          const res = await axios.get(`http://localhost:4000/api/frases/${publicId}`);
+          counts[publicId] = res.data.length;
+        } catch {
+          counts[publicId] = 0;
+        }
+      }
+      setCommentsCount(counts);
+    };
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+    if (images.length) {
+      fetchCommentsCount();
+    }
+  }, [images]);
 
-
-app.use(cors());
-app.use(express.json());
-
-// Conexión a MongoDB
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log('Conectado a MongoDB'))
-.catch(err => console.error('Error de conexión a MongoDB:', err));
-
-// Servir imágenes
-const imagesPath = path.join(__dirname, 'images');
-app.use('/images', express.static(imagesPath));
-
-// Obtener lista de imágenes
-app.get('/api/images', async (req, res) => {
-  try {
-    const result = await cloudinary.search
-      .expression('folder:fotos') // Usa tu carpeta de Cloudinary si subes allí
-      .sort_by('public_id','desc')
-      .max_results(100)
-      .execute();
-
-    const imagePublicIds = result.resources.map(img => img.public_id);
-    res.json(imagePublicIds); // devolverá array tipo: ["galeria/foto1", "galeria/foto2"]
-  } catch (err) {
-    console.error('Error al obtener imágenes de Cloudinary:', err);
-    res.status(500).json({ error: 'No se pudo obtener imágenes' });
-  }
-});
-
-
-// Obtener frases por imagen
-app.get('/api/frases/:id', async (req, res) => {
-  try {
-    const frases = await Frase.find({ imagenId: req.params.id }).sort({ fecha: -1 });
-    res.json(frases);
-  } catch (err) {
-    res.status(500).json({ error: 'Error al obtener frases' });
-  }
-});
-
-// Añadir frase
-app.post('/api/frases', async (req, res) => {
-  const { imageId, frase } = req.body;
-  if (!imageId || !frase) {
-    return res.status(400).json({ error: 'Faltan datos' });
-  }
-
-  try {
-    const nuevaFrase = new Frase({ imagenId: imageId, texto: frase });
-    await nuevaFrase.save();
-    res.status(201).json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: 'Error al guardar frase' });
-  }
-});
-
-app.listen(PORT, () => {
-  console.log(`Servidor escuchando en http://localhost:${PORT}`);
-});
+  return (
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+      gap: '20px',
+    }}>
+      {images.map((publicId) => (
+        <div
+          key={publicId}
+          onClick={() => onImageClick(publicId)}
+          style={{
+            position: 'relative',
+            cursor: 'pointer',
+            overflow: 'hidden',
+            borderRadius: '12px',
+            transition: 'transform 0.2s',
+          }}
+        >
+          <img
+            src={`${CLOUDINARY_BASE_URL}/${publicId}.jpg`}
+            alt={publicId}
+            style={{
+              width: '100%',
+              height: 'auto',
+              display: 'block',
+              transition: 'transform 0.3s',
+              borderRadius: '12px',
+            }}
+            draggable={false}
+          />
+          <div style={{
+            position: 'absolute',
+            top: '8px',
+            left: '8px',
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            color: 'white',
+            padding: '4px 8px',
+            borderRadius: '8px',
+            fontSize: '14px',
+            userSelect: 'none',
+          }}>
+            💬 {commentsCount[publicId] || 0}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
