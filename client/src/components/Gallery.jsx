@@ -1,17 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
-const CLOUDINARY_BASE_URL = import.meta.env.VITE_CLOUDINARY_BASE || 'https://res.cloudinary.com/tu_cloud_name/image/upload';
-
-// Función para obtener URL miniatura con ancho 250px (ajústalo si quieres)
-const getThumbnailUrl = (publicId) => `${CLOUDINARY_BASE_URL}/c_scale,w_250/${publicId}.jpg`;
+const CLOUDINARY_BASE_URL = 'https://res.cloudinary.com/dzqzg58b2/image/upload';
 
 export default function Gallery({ onImageClick }) {
   const [images, setImages] = useState([]);
   const [commentsCount, setCommentsCount] = useState({});
 
   useEffect(() => {
-    axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/images`)
+    axios.get('https://proyectofotos.onrender.com/api/images') // Cambia por tu URL real
       .then(res => setImages(res.data))
       .catch(err => console.error('Error cargando imágenes', err));
   }, []);
@@ -21,7 +18,7 @@ export default function Gallery({ onImageClick }) {
       const counts = {};
       for (const publicId of images) {
         try {
-          const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/frases/${publicId}`);
+          const res = await axios.get(`https://proyectofotos.onrender.com/api/frases/${publicId}`);
           counts[publicId] = res.data.length;
         } catch {
           counts[publicId] = 0;
@@ -52,7 +49,7 @@ export default function Gallery({ onImageClick }) {
           }}
         >
           <img
-            src={getThumbnailUrl(publicId)}
+            src={`${CLOUDINARY_BASE_URL}/${publicId}.jpg`}
             alt={publicId}
             style={{
               width: '100%',
