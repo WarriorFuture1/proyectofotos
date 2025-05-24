@@ -19,7 +19,10 @@ cloudinary.config({
 });
 
 
-app.use(cors());
+app.use(cors({
+  origin: 'https://proyectofotos.vercel.app/', 
+  methods: ['GET', 'POST'],
+}));
 app.use(express.json());
 
 // Conexión a MongoDB
