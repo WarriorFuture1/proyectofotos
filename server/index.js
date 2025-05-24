@@ -2,50 +2,80 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const mongoose = require('mongoose');
+require('dotenv').config();
+
+const Frase = require('./models/Frase');
 
 const app = express();
-const PORT = 4000;
+const PORT = process.env.PORT || 4000;
+
+const cloudinary = require('cloudinary').v2;
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
 
 app.use(cors());
 app.use(express.json());
 
-// === SERVIR IMÁGENES DESDE LA CARPETA ===
+// Conexión a MongoDB
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log('Conectado a MongoDB'))
+.catch(err => console.error('Error de conexión a MongoDB:', err));
+
+// Servir imágenes
 const imagesPath = path.join(__dirname, 'images');
 app.use('/images', express.static(imagesPath));
 
-// === ENDPOINT: obtener lista de imágenes ===
-app.get('/api/images', (req, res) => {
-  fs.readdir(imagesPath, (err, files) => {
-    if (err) {
-      console.error('Error al leer carpeta de imágenes:', err);
-      return res.status(500).json({ error: 'No se pudo leer la carpeta' });
-    }
+// Obtener lista de imágenes
+app.get('/api/images', async (req, res) => {
+  try {
+    const result = await cloudinary.search
+      .expression('folder:galeria') // Usa tu carpeta de Cloudinary si subes allí
+      .sort_by('public_id','desc')
+      .max_results(100)
+      .execute();
 
-    // Solo archivos .jpg/.png
-    const imageFiles = files.filter(file =>
-      /\.(jpg|jpeg|png)$/i.test(file)
-    );
-
-    res.json(imageFiles);
-  });
+    const imagePublicIds = result.resources.map(img => img.public_id);
+    res.json(imagePublicIds); // devolverá array tipo: ["galeria/foto1", "galeria/foto2"]
+  } catch (err) {
+    console.error('Error al obtener imágenes de Cloudinary:', err);
+    res.status(500).json({ error: 'No se pudo obtener imágenes' });
+  }
 });
 
-const frases = {}; 
 
-app.get('/api/frases/:id', (req, res) => {
-  const { id } = req.params;
-  res.json(frases[id] || []);
+// Obtener frases por imagen
+app.get('/api/frases/:id', async (req, res) => {
+  try {
+    const frases = await Frase.find({ imagenId: req.params.id }).sort({ fecha: -1 });
+    res.json(frases);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener frases' });
+  }
 });
 
-app.post('/api/frases', (req, res) => {
+// Añadir frase
+app.post('/api/frases', async (req, res) => {
   const { imageId, frase } = req.body;
   if (!imageId || !frase) {
     return res.status(400).json({ error: 'Faltan datos' });
   }
 
-  if (!frases[imageId]) frases[imageId] = [];
-  frases[imageId].push({ frase });
-  res.status(201).json({ success: true });
+  try {
+    const nuevaFrase = new Frase({ imagenId: imageId, texto: frase });
+    await nuevaFrase.save();
+    res.status(201).json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al guardar frase' });
+  }
 });
 
 app.listen(PORT, () => {

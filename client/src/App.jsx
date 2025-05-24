@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Gallery from './components/Gallery';
 
+const CLOUDINARY_BASE_URL = import.meta.env.VITE_CLOUDINARY_URL || 'https://res.cloudinary.com/tu_cloud_name/image/upload';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+
 export default function App() {
   const [images, setImages] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(null);
@@ -11,12 +15,16 @@ export default function App() {
   const [loadingComments, setLoadingComments] = useState(false);
 
   useEffect(() => {
-    axios.get('http://localhost:4000/api/images')
-      .then(res => {
-        const imageIds = res.data.map(name => name.split('.')[0]);
-        setImages(imageIds);
-      })
-      .catch(err => console.error('Error cargando imágenes', err));
+    // Aquí deberías cargar la lista de imágenes desde alguna fuente, pero como
+    // no subes imágenes desde la app ni tienes listado en backend, ponemos lista hardcodeada:
+    // O podrías pedirlas desde Cloudinary (pero necesitarías backend).
+    const hardcodedImages = [
+      'imagen1',
+      'imagen2',
+      'imagen3',
+      // Pon aquí los nombres públicos que tengas en Cloudinary (sin extensión)
+    ];
+    setImages(hardcodedImages);
   }, []);
 
   useEffect(() => {
@@ -30,7 +38,7 @@ export default function App() {
   useEffect(() => {
     if (selectedImage) {
       setLoadingComments(true);
-      axios.get(`http://localhost:4000/api/frases/${selectedImage}`)
+      axios.get(`${API_BASE_URL}/api/frases/${selectedImage}`)
         .then(res => {
           setComments(res.data);
           setLoadingComments(false);
@@ -46,11 +54,11 @@ export default function App() {
 
   const addComment = () => {
     if (!newComment.trim()) return;
-    axios.post('http://localhost:4000/api/frases', {
+    axios.post(`${API_BASE_URL}/api/frases`, {
       imageId: selectedImage,
       frase: newComment.trim(),
     })
-      .then(() => axios.get(`http://localhost:4000/api/frases/${selectedImage}`))
+      .then(() => axios.get(`${API_BASE_URL}/api/frases/${selectedImage}`))
       .then(res => {
         setComments(res.data);
         setNewComment('');
@@ -83,7 +91,7 @@ export default function App() {
       width: '100vw',
       boxSizing: 'border-box'
     }}>
-      <h1 style={{ textAlign: 'center', marginBottom: '20px', marginTop: '10px', color: 'white' }}>ZULO gallery</h1>
+      <h1 style={{ textAlign: 'center', marginBottom: '0px', marginTop: '10px', color: 'white' }}>ZULO gallery</h1>
       <Gallery
         images={images}
         onImageClick={(id) => {
@@ -172,7 +180,7 @@ export default function App() {
 
             {/* Imagen */}
             <img
-              src={`http://localhost:4000/images/${selectedImage}.jpg`}
+              src={`${CLOUDINARY_BASE_URL}/${selectedImage}.jpg`}
               alt={selectedImage}
               style={{
                 flex: '1 1 auto',
