@@ -11,7 +11,9 @@ export default function Gallery({ images, onImageClick }) {
       const counts = {};
       for (const publicId of images) {
         try {
-          const res = await axios.get(`http://localhost:4000/api/frases/${publicId}`);
+          const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+          const res = await axios.get(`${API_BASE_URL}/api/frases/${publicId}`);
+
           counts[publicId] = res.data.length;
         } catch {
           counts[publicId] = 0;
