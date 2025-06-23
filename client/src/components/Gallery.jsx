@@ -1,7 +1,7 @@
 const CLOUDINARY_BASE_URL = import.meta.env.VITE_CLOUDINARY_BASE || 'https://res.cloudinary.com/dzqzg58b2/image/upload';
 
 export default function Gallery({ images, onImageClick }) {
-  const gap = '16px'; // Puedes ajustar este valor
+  const gap = '16px';
 
   return (
     <div
@@ -16,13 +16,13 @@ export default function Gallery({ images, onImageClick }) {
       {images.map((publicId) => (
         <img
           key={publicId}
-          src={`${CLOUDINARY_BASE_URL}/${publicId}.jpg`}
+          src={`${CLOUDINARY_BASE_URL}/${publicId}`}
           alt={publicId}
           style={{
             width: '100%',
             height: 'auto',
             display: 'block',
-            marginBottom: gap, // Margen entre imágenes de la misma columna
+            marginBottom: gap,
             borderRadius: '12px',
             boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
             breakInside: 'avoid',
