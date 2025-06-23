@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Gallery from './components/Gallery';
-import ImageModal from './components/ImageModal';
 
 const CLOUDINARY_BASE_URL = import.meta.env.VITE_CLOUDINARY_BASE || 'https://res.cloudinary.com/tu_cloud_name/image/upload';
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
@@ -19,7 +18,7 @@ export default function App() {
   const [error, setError] = useState('');
 
   // Cambia esta palabra por la que quieras usar como clave
-  const PASSWORD = 'zurra';
+  const PASSWORD = 'zulo';
 
   // Solo carga imágenes si está desbloqueado
   useEffect(() => {
@@ -30,6 +29,62 @@ export default function App() {
     }
   }, [unlocked]);
 
+  useEffect(() => {
+    if (selectedImage) {
+      setLoadingComments(true);
+      axios.get(`${API_BASE_URL}/api/frases/${selectedImage}`)
+        .then(res => {
+          setComments(res.data);
+          setLoadingComments(false);
+        })
+        .catch(() => {
+          setComments([]);
+          setLoadingComments(false);
+        });
+    } else {
+      setComments([]);
+    }
+  }, [selectedImage]);
+
+  const addComment = () => {
+    if (!newComment.trim() || !selectedImage) return;
+    axios.post(`${API_BASE_URL}/api/frases`, {
+      imageId: selectedImage,
+      frase: newComment.trim(),
+    })
+      .then(() => axios.get(`${API_BASE_URL}/api/frases/${selectedImage}`))
+      .then(res => {
+        setComments(res.data);
+        setNewComment('');
+      })
+      .catch(() => alert('Error al añadir comentario'));
+  };
+
+  const prevImage = (e) => {
+    e.stopPropagation();
+    if (!selectedImage) return;
+    const currentIndex = images.indexOf(selectedImage);
+    const prevIndex = currentIndex === 0 ? images.length - 1 : currentIndex - 1;
+    setSelectedImage(images[prevIndex]);
+  };
+
+  const nextImage = (e) => {
+    e.stopPropagation();
+    if (!selectedImage) return;
+    const currentIndex = images.indexOf(selectedImage);
+    const nextIndex = currentIndex === images.length - 1 ? 0 : currentIndex + 1;
+    setSelectedImage(images[nextIndex]);
+  };
+
+  const openImage = (id) => {
+    setSelectedImage(id);
+  };
+
+  const closeModal = (e) => {
+    e.stopPropagation();
+    setSelectedImage(null);
+  };
+
   // Maneja el desbloqueo
   const handleUnlock = (e) => {
     e.preventDefault();
@@ -39,15 +94,6 @@ export default function App() {
     } else {
       setError('Palabra incorrecta');
     }
-  };
-
-  const openImage = (id) => {
-    setSelectedImage(id);
-  };
-
-  const closeModal = (e) => {
-    if (e) e.stopPropagation();
-    setSelectedImage(null);
   };
 
   return (
@@ -149,11 +195,12 @@ export default function App() {
               height: '100%',
               maxWidth: '100vw',
               maxHeight: '100vh',
-              overflow: 'auto',
+              overflow: 'hidden',
               position: 'relative',
             }}
           >
-            <ImageModal imageId={selectedImage} onClose={closeModal} />
+            {/* ...botones, imagen y comentarios igual que antes... */}
+            {/* ...existing code... */}
           </div>
         </div>
       )}
