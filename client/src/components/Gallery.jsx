@@ -1,76 +1,35 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-
 const CLOUDINARY_BASE_URL = import.meta.env.VITE_CLOUDINARY_BASE || 'https://res.cloudinary.com/dzqzg58b2/image/upload';
 
 export default function Gallery({ images, onImageClick }) {
-  const [commentsCount, setCommentsCount] = useState({});
-
-  useEffect(() => {
-    const fetchCommentsCount = async () => {
-      const counts = {};
-      for (const publicId of images) {
-        try {
-          const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
-          const res = await axios.get(`${API_BASE_URL}/api/frases/${publicId}`);
-
-          counts[publicId] = res.data.length;
-        } catch {
-          counts[publicId] = 0;
-        }
-      }
-      setCommentsCount(counts);
-    };
-
-    if (images.length) {
-      fetchCommentsCount();
-    }
-  }, [images]);
-
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-      gap: '20px',
-    }}>
+    <div
+      style={{
+        width: '100%',
+        maxWidth: '700px',
+        margin: '0 auto',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 0, // Sin espacio entre imágenes
+      }}
+    >
       {images.map((publicId) => (
-        <div
+        <img
           key={publicId}
-          onClick={() => onImageClick(publicId)}
+          src={`${CLOUDINARY_BASE_URL}/${publicId}.jpg`}
+          alt={publicId}
           style={{
-            position: 'relative',
-            cursor: 'pointer',
-            overflow: 'hidden',
-            borderRadius: '12px',
-            transition: 'transform 0.2s',
+            width: '100%',
+            height: 'auto',
+            display: 'block',
+            margin: 0,
+            padding: 0,
+            borderRadius: '0',
+            border: 'none',
+            boxShadow: 'none',
           }}
-        >
-          <img
-            src={`${CLOUDINARY_BASE_URL}/${publicId}.jpg`}
-            alt={publicId}
-            style={{
-              width: '100%',
-              height: 'auto',
-              display: 'block',
-              transition: 'transform 0.3s',
-              borderRadius: '12px',
-            }}
-            draggable={false}
-          />
-          <div style={{
-            position: 'absolute',
-            top: '8px',
-            left: '8px',
-            backgroundColor: 'rgba(0, 0, 0, 0.6)',
-            color: 'white',
-            padding: '4px 8px',
-            borderRadius: '8px',
-            fontSize: '14px',
-            userSelect: 'none',
-          }}>
-            💬 {commentsCount[publicId] || 0}
-          </div>
-        </div>
+          draggable={false}
+          onClick={() => onImageClick(publicId)}
+        />
       ))}
     </div>
   );
