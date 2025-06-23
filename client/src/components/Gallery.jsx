@@ -15,7 +15,7 @@ export default function Gallery({ images, onImageClick }) {
       {images.map((publicId) => (
         <img
           key={publicId}
-          src={`${CLOUDINARY_BASE_URL}/${publicId}.jpg`}
+          src={`${CLOUDINARY_BASE_URL}/${publicId}`}
           alt={publicId}
           style={{
             width: '100%',
