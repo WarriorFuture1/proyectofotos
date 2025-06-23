@@ -20,7 +20,7 @@ cloudinary.config({
 
 
 app.use(cors({
-  origin: 'https://proyectofotos.vercel.app', 
+  origin: 'https://proyectofotos.vercel.app/', 
   methods: ['GET', 'POST'],
 }));
 app.use(express.json());
