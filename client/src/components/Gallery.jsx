@@ -4,12 +4,11 @@ export default function Gallery({ images, onImageClick }) {
   return (
     <div
       style={{
-        width: '25%',
-        maxWidth: '700px',
+        columns: 3, // Cambia el número de columnas según tu preferencia
+        columnGap: 0, // Sin espacio horizontal entre columnas
+        width: '100%',
+        maxWidth: '1200px',
         margin: '0 auto',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 0, // Sin espacio entre imágenes
       }}
     >
       {images.map((publicId) => (
@@ -23,9 +22,10 @@ export default function Gallery({ images, onImageClick }) {
             display: 'block',
             margin: 0,
             padding: 0,
-            borderRadius: '0',
             border: 'none',
+            borderRadius: 0,
             boxShadow: 'none',
+            breakInside: 'avoid', // Evita cortes de imagen entre columnas
           }}
           draggable={false}
           onClick={() => onImageClick(publicId)}
