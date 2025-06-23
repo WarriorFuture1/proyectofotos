@@ -4,7 +4,7 @@ export default function Gallery({ images, onImageClick }) {
   return (
     <div
       style={{
-        width: '100%',
+        width: '25%',
         maxWidth: '700px',
         margin: '0 auto',
         display: 'flex',
