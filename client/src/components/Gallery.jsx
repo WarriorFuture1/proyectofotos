@@ -4,10 +4,10 @@ export default function Gallery({ images, onImageClick }) {
   return (
     <div
       style={{
-        columns: 3, // Cambia el número de columnas según tu preferencia
-        columnGap: 0, // Sin espacio horizontal entre columnas
+        columns: 4, // 4 columnas
+        columnGap: '16px', // Margen entre columnas
         width: '100%',
-        maxWidth: '1200px',
+        maxWidth: '1400px',
         margin: '0 auto',
       }}
     >
@@ -20,12 +20,11 @@ export default function Gallery({ images, onImageClick }) {
             width: '100%',
             height: 'auto',
             display: 'block',
-            margin: 0,
-            padding: 0,
-            border: 'none',
-            borderRadius: 0,
-            boxShadow: 'none',
-            breakInside: 'avoid', // Evita cortes de imagen entre columnas
+            marginBottom: '0px', // Sin margen vertical entre imágenes
+            borderRadius: '12px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+            breakInside: 'avoid',
+            cursor: 'pointer',
           }}
           draggable={false}
           onClick={() => onImageClick(publicId)}
